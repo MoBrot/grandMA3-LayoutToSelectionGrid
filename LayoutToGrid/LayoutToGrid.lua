@@ -139,7 +139,7 @@ local function getElements()
             local temp = {
                 id = layout[i]:Get("Object"):ToAddr(),
                 posX = twosCompToInt(layout[i].posx),
-                posY = twosCompToInt(layout[i].posy)
+                posY = twosCompToInt(layout[i].posy * (-1))
             }
 
             table.insert(elements, temp)
