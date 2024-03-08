@@ -1,0 +1,6 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<GMA3 DataVersion="0.1.62.0">
+    <Plugin Name="LayoutToGrid" Guid="00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00" Version="1.0.0.0" Path="/LayoutToGrid">
+        <ComponentLua ContentType="Installed" Name="LayoutToGrid" FileName="LayoutToGrid.lua" />
+    </Plugin>
+</GMA3>
