@@ -1,63 +1,59 @@
-local destinationLayout;
+local destinationLayout
+local needsToBeSelected
 
 local function log(arg)
-	Printf(arg)
+    Printf(arg)
 end
 
 local function arrayHasValue(tab, val)
-	for index, value in ipairs(tab) do
-			if value == val then
-					return true
-			end
-	end
-	return false
+    for index, value in ipairs(tab) do
+        if value == val then
+            return true
+        end
+    end
+    return false
 end
 
 local function highestXValue(elements)
-	local result = 0
-	for i = 1, #elements do
-			if elements[i].posX > result then
-					result = elements[i].posX
-			end
-	end
-	return result
+    local result = 0
+    for i = 1, #elements do
+        if elements[i].posX > result then
+            result = elements[i].posX
+        end
+    end
+    return result
 end
 
-local function executeCommand(command) 
-	Cmd(command)
+local function executeCommand(command)
+    Cmd(command)
 end
 
 local function selectCellInGrid(element)
-	executeCommand("Grid " .. (element.posX) .. "/" .. (element.posY - 1))
-	executeCommand(element.id)
+    executeCommand("Grid " .. (element.posX) .. "/" .. (element.posY - 1))
+    executeCommand(element.id)
 end
 
 local function setIntoGrid(elements)
+    local temp
+    local current
+    local x = 0
 
-		local temp;
-		local current;
-		local x = 0;
+    for l = 1, highestXValue(elements) do
+        x = l - 1
 
-		for l = 1, highestXValue(elements) do
+        for i = 1, #elements do
+            current = elements[i]
 
-			x = l - 1
-
-			for i = 1, #elements do
-
-				current = elements[i]
-
-				if x <= current.posX - 1 then
-
-					temp = {
-						id = current.id,
-						posX = x,
-						posY = current.posY
-					}
-
-					selectCellInGrid(temp)
-				end
-			end
-		end
+            if x <= current.posX - 1 then
+                temp = {
+                    id = current.id,
+                    posX = x,
+                    posY = current.posY
+                }
+                selectCellInGrid(temp)
+            end
+        end
+    end
 end
 
 local function normalizeX(array)
@@ -101,32 +97,32 @@ local function normalizeY(array)
 end
 
 local function twosCompToInt(val)
-	if val > 32767 then
-			return val - 65536
-	else
-			return val
-	end
+    if val > 32767 then
+        return val - 65536
+    else
+        return val
+    end
 end
 
 local function convert(elements)
-	table.sort(elements, function(left, right)
-			return left.posX < right.posX
-	end)
+    table.sort(elements, function(left, right)
+        return left.posX < right.posX
+    end)
 
-	local result = {}
-	local yCalc = normalizeY(elements)
-	local xCalc = normalizeX(elements)
+    local result = {}
+    local yCalc = normalizeY(elements)
+    local xCalc = normalizeX(elements)
 
-	for i = 1, #elements do
-			local temp = {
-					id = elements[i].id,
-					posX = xCalc[i],
-					posY = yCalc[i]
-			}
-			table.insert(result, temp)
-	end
+    for i = 1, #elements do
+        local temp = {
+            id = elements[i].id,
+            posX = xCalc[i],
+            posY = yCalc[i]
+        }
+        table.insert(result, temp)
+    end
 
-	return result
+    return result
 end
 
 local function getElements()
@@ -135,14 +131,20 @@ local function getElements()
 
     for i = 1, #layout do
         if layout[i].assignType == "Fixture" then
+            local insert = true
 
-            local temp = {
-                id = layout[i]:Get("Object"):ToAddr(),
-                posX = twosCompToInt(layout[i].posx),
-                posY = twosCompToInt(layout[i].posy * (-1))
-            }
+            if needsToBeSelected == true and layout[i].selected ~= true then
+                insert = false
+            end
 
-            table.insert(elements, temp)
+            if insert == true then
+                local temp = {
+                    id = layout[i]:Get("Object"):ToAddr(),
+                    posX = twosCompToInt(layout[i].posx),
+                    posY = twosCompToInt(layout[i].posy * (-1))
+                }
+                table.insert(elements, temp)
+            end
         end
     end
 
@@ -150,47 +152,52 @@ local function getElements()
 end
 
 local function main()
+    local numbers = "0123456789"
+    local pufferDefault = 10
 
-	local numbers = "0123456789"
-	local pufferDefault = 10;
+    local layoutInput = {
+        {
+            name = "Destinationlayout (ID)",
+            value = "",
+            whiteFilter = numbers
+        }
+    }
 
-	local layoutInput = {
-		{
-		name = "Destinationlayout (ID)",
-		value = "",
-		whiteFilter = numbers
-	}
-}
+    local layoutState = {
+        {
+            name = "Only selected",
+            value = false
+        }
+    }
 
-	local messageBox = MessageBox(
-		{
-			title = "Layout to SelectionGrid converter",
-			message = "Which layout should be Converted?",
-			message_align_h = Enums.AlignmentH.Middle,
-			commands = {{value = 1, name = "Go!"}, {value = 0, name = "Cancel :("}},
-			inputs = layoutInput,
-			backColor = "Global.Default",
-			titleTextColor = "Global.Text",
-			messageTextColor = "Global.Text",
-		}
-	)
+    local messageBox = MessageBox(
+        {
+            title = "Layout to SelectionGrid converter",
+            message = "Which layout should be Converted?",
+            message_align_h = Enums.AlignmentH.Middle,
+            commands = {{value = 1, name = "Go!"}, {value = 0, name = "Cancel :("}},
+            inputs = layoutInput,
+            states = layoutState,
+            backColor = "Global.Default",
+            titleTextColor = "Global.Text",
+            messageTextColor = "Global.Text",
+        }
+    )
 
-	if messageBox.result == 1 then
+    if messageBox.result == 1 then
+        destinationLayout = math.tointeger(messageBox.inputs["Destinationlayout (ID)"])
+        needsToBeSelected = messageBox.states["Only selected"]
 
-		for k,v in pairs(messageBox.inputs) do
-			destinationLayout = math.tointeger(v);
-		end
+        executeCommand("Clear")
 
-		executeCommand("Clear")
+        local elements = convert(getElements())
 
-		local elements = convert(getElements()) 
+        table.sort(elements, function(left, right)
+            return left.posY < right.posY
+        end)
 
-		table.sort(elements, function (left, right)
-				return left.posY < right.posY
-			end)
-
-		setIntoGrid(elements)
-	end
+        setIntoGrid(elements)
+    end
 end
 
 return main
