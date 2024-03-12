@@ -57,10 +57,12 @@ local function setIntoGrid(elements)
 end
 
 local function normalizeX(array)
+
     local result = {}
     local current
     local last
     local counter = 0
+
     for i = 1, #array do
         current = array[i].posX
         if current ~= last then
@@ -96,14 +98,6 @@ local function normalizeY(array)
     return result
 end
 
-local function twosCompToInt(val)
-    if val > 32767 then
-        return val - 65536
-    else
-        return val
-    end
-end
-
 local function convert(elements)
     table.sort(elements, function(left, right)
         return left.posX < right.posX
@@ -125,6 +119,14 @@ local function convert(elements)
     return result
 end
 
+local function recalc(val)
+    if (val > 32767) then
+        return val - 65536
+    else
+        return val
+    end
+end
+
 local function getElements()
     local layout = DataPool().Layouts[destinationLayout]
     local elements = {}
@@ -140,8 +142,8 @@ local function getElements()
             if insert == true then
                 local temp = {
                     id = layout[i]:Get("Object"):ToAddr(),
-                    posX = twosCompToInt(layout[i].posx),
-                    posY = twosCompToInt(layout[i].posy * (-1))
+                    posX = recalc(layout[i].posx),
+                    posY = recalc(layout[i].posy) * (-1)
                 }
                 table.insert(elements, temp)
             end
